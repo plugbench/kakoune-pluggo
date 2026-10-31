@@ -6,3 +6,5 @@ Unreleased
 
 * Honor $NATS_TOKEN.
 * Back to one binary.
+* Files shown in windows are visits, sent to the frecency store
+  (`cmd.add.frecent`).

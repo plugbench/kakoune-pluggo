@@ -8,6 +8,14 @@ hook -group pluggo global RegisterModified '"' %{
     }
 }
 
+# Files shown are visits, for the frecency store, as file URLs like the plumber's.
+hook -group pluggo global WinDisplay .* %{
+    nop %sh{
+        [ -f "$kak_buffile" ] || exit 0
+        NATS_TOKEN='{{.Nats.Token}}' "$kak_opt_pluggo_bin" command cmd.add.frecent "file://$(uname -n)$kak_buffile" </dev/null >/dev/null 2>&1 &
+    }
+}
+
 evaluate-commands %sh{
     NATS_TOKEN='{{.Nats.Token}}' "$kak_opt_pluggo_bin" daemon "$kak_session" </dev/null >/dev/null 2>&1 &
     daemon_pid=$!
