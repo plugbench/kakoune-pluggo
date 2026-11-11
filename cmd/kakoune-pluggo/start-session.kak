@@ -178,7 +178,8 @@ define-command -hidden plumb-click-diff %{
 define-command \
     -docstring %{plumb-click: send selection or WORD to plumber
 
-If the selection length is 1, send the current WORD to the plumber along with
+If the selection length is 1, send the URI of the hyperlink under it, as
+recorded by kak-ansi, or else the current WORD to the plumber along with
 click coordinates.  Otherwise, send the selection to the plumber.
 
 There is special handling for filetype=diff.} \
@@ -192,7 +193,25 @@ There is special handling for filetype=diff.} \
             execute-keys '<a-K>\A[^\s]\z<ret>'
             plumb %val{selection}
         } catch %{
+            try %{ update-option buffer ansi_hyperlink_ranges }
             evaluate-commands -draft %sh{
+                at_or_after() {
+                    [ "$1" -gt "$3" ] || { [ "$1" -eq "$3" ] && [ "$2" -ge "$4" ]; }
+                }
+                eval set -- "$kak_quoted_opt_ansi_hyperlink_ranges"
+                [ $# -gt 0 ] && shift
+                for spec in "$@"; do
+                    range=${spec%%|*}
+                    start=${range%,*}
+                    end=${range#*,}
+                    if at_or_after "$kak_cursor_line" "$kak_cursor_column" "${start%.*}" "${start#*.}" &&
+                       at_or_after "${end%.*}" "${end#*.}" "$kak_cursor_line" "$kak_cursor_column"; then
+                        # Kakoune escapes \ and | in range-specs strings.
+                        uri=$(printf %s "${spec#*|}" | sed -e 's/\\\(.\)/\1/g' -e "s/'/''/g")
+                        printf "plumb '%s'\n" "$uri"
+                        exit
+                    fi
+                done
                 case "$kak_opt_filetype" in
                     diff) printf plumb-click-diff\\n ;;
                     *)    printf plumb-click-WORD\\n ;;

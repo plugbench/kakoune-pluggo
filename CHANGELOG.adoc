@@ -8,3 +8,5 @@ Unreleased
 * Back to one binary.
 * Files shown in windows are visits, sent to the frecency store
   (`cmd.add.frecent`).
+* `plumb-click` on a single character in an OSC 8 hyperlink, as recorded by
+  kak-ansi in `ansi_hyperlink_ranges`, plumbs the link's URI.
